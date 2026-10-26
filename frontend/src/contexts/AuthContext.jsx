@@ -34,17 +34,46 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    if (response.data?.success) {
-      const data = response.data.data;
-      localStorage.setItem('monitoring_access_token', data.accessToken);
-      localStorage.setItem('monitoring_refresh_token', data.refreshToken);
-      localStorage.setItem('monitoring_user', JSON.stringify(data));
-      setToken(data.accessToken);
-      setUser(data);
-      return data;
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      if (response.data?.success) {
+        const data = response.data.data;
+        localStorage.setItem('monitoring_access_token', data.accessToken);
+        localStorage.setItem('monitoring_refresh_token', data.refreshToken);
+        localStorage.setItem('monitoring_user', JSON.stringify(data));
+        setToken(data.accessToken);
+        setUser(data);
+        return data;
+      }
+      throw new Error(response.data?.message || 'Login failed');
+    } catch (err) {
+      // Offline / GitHub Pages fallback for 1-click demo accounts
+      const isDemoAdmin = email === 'admin@monitoring.local' && password === 'Admin@123456';
+      const isDemoOrg = email === 'orgadmin@acme.local' && password === 'OrgAdmin@123456';
+      const isDemoUser = email === 'operator@acme.local' && password === 'User@123456';
+
+      if (isDemoAdmin || isDemoOrg || isDemoUser) {
+        const mockData = {
+          accessToken: 'demo-mock-jwt-token-access',
+          refreshToken: 'demo-mock-jwt-token-refresh',
+          userId: isDemoAdmin ? 'demo-admin-id' : isDemoOrg ? 'demo-org-id' : 'demo-user-id',
+          email: email,
+          fullName: isDemoAdmin ? 'Platform Super Admin' : isDemoOrg ? 'Acme Org Administrator' : 'Field Operator Jatin',
+          role: isDemoAdmin ? 'ROLE_MASTER_ADMIN' : isDemoOrg ? 'ROLE_ORG_ADMIN' : 'ROLE_USER',
+          organizationId: 'demo-org-uuid',
+          organizationName: 'Global Monitoring Corp',
+          activeSessionCount: 3,
+          isDemoMode: true
+        };
+        localStorage.setItem('monitoring_access_token', mockData.accessToken);
+        localStorage.setItem('monitoring_refresh_token', mockData.refreshToken);
+        localStorage.setItem('monitoring_user', JSON.stringify(mockData));
+        setToken(mockData.accessToken);
+        setUser(mockData);
+        return mockData;
+      }
+      throw new Error(err.response?.data?.message || err.message || 'Login failed');
     }
-    throw new Error(response.data?.message || 'Login failed');
   };
 
   const register = async (formData) => {

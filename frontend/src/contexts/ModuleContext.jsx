@@ -31,7 +31,23 @@ export const ModuleProvider = ({ children }) => {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch dynamic modules', err);
+      console.warn('Backend offline or static GitHub Pages preview - using demo modules fallback', err);
+      // Fallback active modules for static demo preview
+      const defaultModules = [
+        { id: 'mod-1', moduleKey: 'location', name: 'Live GPS Tracking', isEnabled: true, icon: 'Navigation' },
+        { id: 'mod-2', moduleKey: 'audio', name: 'Microphone & Audio', isEnabled: true, icon: 'Mic' },
+        { id: 'mod-3', moduleKey: 'camera', name: 'Camera & Video Feeds', isEnabled: true, icon: 'Camera' },
+        { id: 'mod-4', moduleKey: 'devices', name: 'Device Fleet', isEnabled: true, icon: 'Smartphone' },
+        { id: 'mod-5', moduleKey: 'users', name: 'User Management', isEnabled: true, icon: 'Users' },
+        { id: 'mod-6', moduleKey: 'organizations', name: 'Organizations', isEnabled: true, icon: 'Building2' },
+        { id: 'mod-7', moduleKey: 'module_config', name: 'Module Configuration', isEnabled: true, icon: 'Cpu' },
+        { id: 'mod-8', moduleKey: 'consent', name: 'Consent Ledger', isEnabled: true, icon: 'ShieldCheck' },
+        { id: 'mod-9', moduleKey: 'audit', name: 'Audit Logs', isEnabled: true, icon: 'FileText' }
+      ];
+      setModules(defaultModules);
+      if (user?.role === 'ROLE_MASTER_ADMIN') {
+        setAllAdminModules(defaultModules);
+      }
     } finally {
       setIsLoadingModules(false);
     }

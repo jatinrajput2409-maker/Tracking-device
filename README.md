@@ -1,5 +1,8 @@
 # Dynamic Multi-Module Device Monitoring & Admin Platform
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-06b6d4?style=for-the-badge&logo=github)](https://jatinrajput2409-maker.github.io/Tracking-device/)
+🌐 **Live Demo URL**: [https://jatinrajput2409-maker.github.io/Tracking-device/](https://jatinrajput2409-maker.github.io/Tracking-device/)
+
 > **Enterprise multi-tenant, consent-based device monitoring, live GPS tracking, WebRTC audio/video sessions, and dynamic runtime module management.**
 
 Built with **React (Vite, Tailwind CSS, Leaflet, Recharts)** on the frontend and **Java 21/23 Spring Boot (Spring Security, JWT, Flyway, WebSocket, OpenAPI)** on the backend.
