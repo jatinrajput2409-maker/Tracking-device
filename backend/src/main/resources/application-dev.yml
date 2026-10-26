@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:monitoringdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driverClassName: org.h2.Driver
+    username: sa
+    password: 
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: false # In dev mode with in-memory H2, Hibernate ddl-auto maintains schema and DataInitializer loads seed data
+
+logging:
+  level:
+    root: INFO
+    com.example.monitoring: DEBUG
+    org.springframework.security: INFO
