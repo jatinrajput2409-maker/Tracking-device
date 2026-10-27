@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { handleMockRequest } from './mockData';
+
+const isGitHubPages = typeof window !== 'undefined' && window.location.hostname.includes('github.io');
 
 const api = axios.create({
   baseURL: '/api/v1',
@@ -10,6 +13,19 @@ const api = axios.create({
 // Request Interceptor: Attach JWT token if available
 api.interceptors.request.use(
   (config) => {
+    // If on GitHub Pages, directly return mock data for static preview
+    if (isGitHubPages) {
+      const mockResult = handleMockRequest(config.url || '', config.method || 'GET', config.data);
+      config.adapter = async () => ({
+        data: mockResult,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config
+      });
+      return config;
+    }
+
     const token = localStorage.getItem('monitoring_access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -19,11 +35,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle Token Expiration
+// Response Interceptor: Handle Token Expiration and offline fallback
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // If request failed because backend is offline or returned 404, fallback to mock data
+    if (!error.response || error.response?.status === 404 || error.code === 'ERR_NETWORK') {
+      console.warn(`[AegisMonitor] Live API unavailable for ${originalRequest.url}. Falling back to simulation engine.`);
+      const mockResult = handleMockRequest(originalRequest.url || '', originalRequest.method || 'GET', originalRequest.data);
+      return Promise.resolve({
+        data: mockResult,
+        status: 200,
+        statusText: 'OK (Mock Fallback)',
+        headers: {},
+        config: originalRequest
+      });
+    }
     
     // If 401 Unauthorized and not already retrying
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -40,7 +69,6 @@ api.interceptors.response.use(
             return api(originalRequest);
           }
         } catch (refreshErr) {
-          // If refresh fails, clear tokens and redirect to login
           localStorage.removeItem('monitoring_access_token');
           localStorage.removeItem('monitoring_refresh_token');
           localStorage.removeItem('monitoring_user');
