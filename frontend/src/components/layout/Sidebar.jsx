@@ -23,6 +23,7 @@ import {
 const ICON_MAP = {
   LayoutDashboard,
   MapPin,
+  Navigation: MapPin,
   Mic,
   Camera,
   Smartphone,
@@ -32,6 +33,19 @@ const ICON_MAP = {
   ShieldCheck,
   FileText,
   Activity
+};
+
+const ROUTE_MAP = {
+  dashboard: '/dashboard',
+  location: '/location',
+  audio: '/audio',
+  camera: '/camera',
+  devices: '/devices',
+  users: '/users',
+  organizations: '/organizations',
+  module_config: '/module-management',
+  consent: '/consent',
+  audit: '/audit-logs'
 };
 
 export default function Sidebar({ isCollapsed, onToggle }) {
@@ -82,11 +96,12 @@ export default function Sidebar({ isCollapsed, onToggle }) {
             </div>
           ) : (
             modules.map((m) => {
-              const IconComponent = ICON_MAP[m.icon] || Layers;
+              const IconComponent = ICON_MAP[m.icon] || ICON_MAP[m.moduleKey] || Layers;
+              const targetRoute = m.route || ROUTE_MAP[m.moduleKey] || `/${m.moduleKey}`;
               return (
                 <NavLink
-                  key={m.id}
-                  to={m.route}
+                  key={m.id || m.moduleKey}
+                  to={targetRoute}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                       isActive

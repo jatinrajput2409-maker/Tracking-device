@@ -1,29 +1,45 @@
-// Mock Data & Simulation Engine for GitHub Pages Static Demo
-const MOCK_STORAGE_KEY_MODULES = 'aegis_mock_modules';
+// Comprehensive Mock Data & Simulation Engine for GitHub Pages Static Deployment
+const MOCK_STORAGE_KEY_MODULES = 'aegis_mock_modules_v2';
 const MOCK_STORAGE_KEY_DEVICES = 'aegis_mock_devices';
+const MOCK_STORAGE_KEY_LINKS = 'aegis_mock_links';
 const MOCK_STORAGE_KEY_USERS = 'aegis_mock_users';
+const MOCK_STORAGE_KEY_ORGS = 'aegis_mock_orgs';
 const MOCK_STORAGE_KEY_CONSENTS = 'aegis_mock_consents';
 const MOCK_STORAGE_KEY_AUDITS = 'aegis_mock_audits';
 
+const ROUTE_MAP = {
+  dashboard: '/dashboard',
+  location: '/location',
+  audio: '/audio',
+  camera: '/camera',
+  devices: '/devices',
+  users: '/users',
+  organizations: '/organizations',
+  module_config: '/module-management',
+  consent: '/consent',
+  audit: '/audit-logs'
+};
+
 const INITIAL_MODULES = [
-  { id: '1', moduleKey: 'location', name: 'Live GPS Tracking', isEnabled: true, description: 'Real-time GPS beacon and consensual telemetry streaming', icon: 'Navigation' },
-  { id: '2', moduleKey: 'audio', name: 'Microphone & Audio', isEnabled: true, description: 'Real-time Web Audio API waveform and audio bridge', icon: 'Mic' },
-  { id: '3', moduleKey: 'camera', name: 'Camera & Video Feeds', isEnabled: true, description: 'Front and rear video streaming with lens toggle', icon: 'Camera' },
-  { id: '4', moduleKey: 'devices', name: 'Device Fleet', isEnabled: true, description: 'Hardware beacons, OS fingerprinting, and remote revoke', icon: 'Smartphone' },
-  { id: '5', moduleKey: 'users', name: 'User Management', isEnabled: true, description: 'RBAC organization members, roles, and status', icon: 'Users' },
-  { id: '6', moduleKey: 'organizations', name: 'Organizations', isEnabled: true, description: 'Multi-tenant boundaries and subscription plans', icon: 'Building2' },
-  { id: '7', moduleKey: 'module_config', name: 'Module Configuration', isEnabled: true, description: 'Dynamic runtime platform feature toggles', icon: 'Cpu' },
-  { id: '8', moduleKey: 'consent', name: 'Consent Ledger', isEnabled: true, description: 'Cryptographic immutable user consent records', icon: 'ShieldCheck' },
-  { id: '9', moduleKey: 'audit', name: 'Audit Logs', isEnabled: true, description: 'Tamper-evident administrative compliance trail', icon: 'FileText' }
+  { id: 'm-001', moduleKey: 'dashboard', name: 'Overview Dashboard', isEnabled: true, description: 'System telemetry, KPI charts, activity stream, and health metrics', icon: 'LayoutDashboard', route: '/dashboard' },
+  { id: 'm-002', moduleKey: 'location', name: 'Live Location Tracking', isEnabled: true, description: 'Consensual real-time GPS positioning, breadcrumb paths, and geofencing', icon: 'MapPin', route: '/location' },
+  { id: 'm-003', moduleKey: 'audio', name: 'Audio Sessions', isEnabled: true, description: 'WebRTC encrypted voice communication with explicit consent and status indicator', icon: 'Mic', route: '/audio' },
+  { id: 'm-004', moduleKey: 'camera', name: 'Camera Sessions', isEnabled: true, description: 'Front/rear WebRTC camera feed streaming with clear active-session consent', icon: 'Camera', route: '/camera' },
+  { id: 'm-005', moduleKey: 'devices', name: 'Device Management', isEnabled: true, description: 'Inspect authorized hardware, browsers, verification status, and revoke access', icon: 'Smartphone', route: '/devices' },
+  { id: 'm-006', moduleKey: 'users', name: 'User Management', isEnabled: true, description: 'Directory of users, invitations, organization binding, and role assignment', icon: 'Users', route: '/users' },
+  { id: 'm-007', moduleKey: 'organizations', name: 'Organizations', isEnabled: true, description: 'Multi-tenant organization structures, quota plans, and tier management', icon: 'Building2', route: '/organizations' },
+  { id: 'm-008', moduleKey: 'module_config', name: 'Dynamic Modules', isEnabled: true, description: 'Runtime activation, role restrictions, and plan entitlement controls', icon: 'Cpu', route: '/module-management' },
+  { id: 'm-009', moduleKey: 'consent', name: 'Consent Records', isEnabled: true, description: 'GDPR/CCPA immutable consent audit trail, purpose logging, and revocation history', icon: 'ShieldCheck', route: '/consent' },
+  { id: 'm-010', moduleKey: 'audit', name: 'Audit Logs', isEnabled: true, description: 'Tamper-evident administrative activity logs, security alerts, and event history', icon: 'FileText', route: '/audit-logs' }
 ];
 
 const INITIAL_DEVICES = [
   {
-    id: 'dev-1',
-    name: 'Field Unit Alpha (Samsung S23)',
-    platform: 'Android 14',
+    id: 'dev-101',
+    name: 'Field Patrol Unit Alpha (Pixel 8)',
+    platform: 'Android 14 (ARM64)',
     browser: 'Chrome Mobile 122',
-    ipAddress: '192.168.1.45',
+    ipAddress: '192.168.1.104',
     isOnline: true,
     gpsEnabled: true,
     audioEnabled: true,
@@ -31,22 +47,22 @@ const INITIAL_DEVICES = [
     lastHeartbeat: new Date().toISOString()
   },
   {
-    id: 'dev-2',
+    id: 'dev-102',
     name: 'Command Laptop (MacBook Pro M3)',
-    platform: 'macOS Sonoma',
-    browser: 'Chrome 122',
+    platform: 'macOS Sonoma (Darwin)',
+    browser: 'Chrome 122 (Desktop)',
     ipAddress: '192.168.1.10',
     isOnline: true,
     gpsEnabled: true,
     audioEnabled: false,
     cameraEnabled: false,
-    lastHeartbeat: new Date(Date.now() - 60000).toISOString()
+    lastHeartbeat: new Date(Date.now() - 45000).toISOString()
   },
   {
-    id: 'dev-3',
-    name: 'Dispatch Tablet (iPad Air)',
+    id: 'dev-103',
+    name: 'Emergency Dispatch Tablet (iPad Air)',
     platform: 'iPadOS 17',
-    browser: 'Safari Mobile',
+    browser: 'Safari Mobile 17',
     ipAddress: '10.0.0.88',
     isOnline: false,
     gpsEnabled: true,
@@ -56,29 +72,56 @@ const INITIAL_DEVICES = [
   }
 ];
 
+const INITIAL_LINKS = [
+  {
+    id: 'lnk-01',
+    token: 'tok-fleet-alpha-99',
+    devicePresetName: 'Operator Tablet #4',
+    locationRequested: true,
+    audioRequested: false,
+    cameraRequested: true,
+    isClaimed: false,
+    expiresAt: new Date(Date.now() + 86400000 * 6).toISOString()
+  }
+];
+
 const INITIAL_USERS = [
-  { id: 'usr-1', email: 'admin@monitoring.local', fullName: 'Super Administrator', role: 'ROLE_MASTER_ADMIN', status: 'ACTIVE', organizationName: 'Global HQ' },
-  { id: 'usr-2', email: 'orgadmin@acme.local', fullName: 'Acme Org Admin', role: 'ROLE_ORG_ADMIN', status: 'ACTIVE', organizationName: 'Acme Operations' },
-  { id: 'usr-3', email: 'operator@acme.local', fullName: 'Field Operator Jatin', role: 'ROLE_USER', status: 'ACTIVE', organizationName: 'Acme Operations' }
+  { id: 'usr-1', email: 'admin@monitoring.local', fullName: 'Master Platform Admin', role: 'ROLE_MASTER_ADMIN', status: 'ACTIVE', organizationName: 'Global Operations HQ' },
+  { id: 'usr-2', email: 'orgadmin@acme.local', fullName: 'Acme Org Administrator', role: 'ROLE_ORG_ADMIN', status: 'ACTIVE', organizationName: 'Acme Operations Fleet' },
+  { id: 'usr-3', email: 'operator@acme.local', fullName: 'Field Operator Jatin', role: 'ROLE_USER', status: 'ACTIVE', organizationName: 'Acme Operations Fleet' }
+];
+
+const INITIAL_ORGS = [
+  { id: 'org-1', name: 'Global Operations HQ', slug: 'global-ops', subscriptionPlan: 'ENTERPRISE', maxDevices: 100, maxUsers: 200, status: 'ACTIVE', createdAt: new Date(Date.now() - 31536000000).toISOString() },
+  { id: 'org-2', name: 'Acme Operations Fleet', slug: 'acme-ops', subscriptionPlan: 'PRO', maxDevices: 50, maxUsers: 50, status: 'ACTIVE', createdAt: new Date(Date.now() - 15536000000).toISOString() }
 ];
 
 const INITIAL_CONSENTS = [
-  { id: 'c-1', deviceName: 'Field Unit Alpha', capability: 'LOCATION', userEmail: 'operator@acme.local', status: 'GRANTED', grantedAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'c-2', deviceName: 'Field Unit Alpha', capability: 'CAMERA', userEmail: 'operator@acme.local', status: 'GRANTED', grantedAt: new Date(Date.now() - 43200000).toISOString() },
-  { id: 'c-3', deviceName: 'Command Laptop', capability: 'AUDIO', userEmail: 'admin@monitoring.local', status: 'REVOKED', grantedAt: new Date(Date.now() - 172800000).toISOString(), revokedAt: new Date(Date.now() - 86400000).toISOString() }
+  { id: 'c-1', deviceName: 'Field Patrol Unit Alpha (Pixel 8)', capability: 'LOCATION', userEmail: 'operator@acme.local', status: 'GRANTED', grantedAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: 'c-2', deviceName: 'Field Patrol Unit Alpha (Pixel 8)', capability: 'CAMERA', userEmail: 'operator@acme.local', status: 'GRANTED', grantedAt: new Date(Date.now() - 43200000).toISOString() },
+  { id: 'c-3', deviceName: 'Command Laptop (MacBook Pro M3)', capability: 'AUDIO', userEmail: 'admin@monitoring.local', status: 'REVOKED', grantedAt: new Date(Date.now() - 172800000).toISOString(), revokedAt: new Date(Date.now() - 86400000).toISOString() }
 ];
 
 const INITIAL_AUDITS = [
-  { id: 'aud-1', action: 'SESSION_LOGIN', details: 'User admin@monitoring.local authenticated via JWT', createdAt: new Date(Date.now() - 1800000).toISOString() },
-  { id: 'aud-2', action: 'MODULE_TOGGLE', details: 'Master Admin enabled Dynamic Camera Module system-wide', createdAt: new Date(Date.now() - 3600000).toISOString() },
-  { id: 'aud-3', action: 'DEVICE_REGISTER', details: 'New device enrolled with hardware beacon #dev-1', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'aud-4', action: 'CONSENT_GRANTED', details: 'Explicit camera & location permission accepted by operator', createdAt: new Date(Date.now() - 90000000).toISOString() }
+  { id: 'aud-1', action: 'SESSION_LOGIN', details: 'User admin@monitoring.local authenticated via JWT token', userEmail: 'admin@monitoring.local', createdAt: new Date(Date.now() - 1800000).toISOString() },
+  { id: 'aud-2', action: 'MODULE_TOGGLE', details: 'Master Admin enabled Dynamic Camera Module system-wide', userEmail: 'admin@monitoring.local', createdAt: new Date(Date.now() - 3600000).toISOString() },
+  { id: 'aud-3', action: 'DEVICE_REGISTER', details: 'New device enrolled with hardware beacon #dev-101', userEmail: 'operator@acme.local', createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: 'aud-4', action: 'CONSENT_GRANTED', details: 'Explicit camera & location permission accepted by operator', userEmail: 'operator@acme.local', createdAt: new Date(Date.now() - 90000000).toISOString() }
 ];
 
 function getStored(key, fallback) {
   try {
     const val = localStorage.getItem(key);
-    return val ? JSON.parse(val) : fallback;
+    if (!val) return fallback;
+    const parsed = JSON.parse(val);
+    // If it's modules, ensure every module has a route
+    if (key === MOCK_STORAGE_KEY_MODULES && Array.isArray(parsed)) {
+      return parsed.map((m) => ({
+        ...m,
+        route: m.route || ROUTE_MAP[m.moduleKey] || `/${m.moduleKey}`
+      }));
+    }
+    return parsed;
   } catch (e) {
     return fallback;
   }
@@ -101,7 +144,7 @@ export function handleMockRequest(url, method = 'GET', data = null) {
     const isMaster = email.includes('admin@monitoring');
     const isOrg = email.includes('orgadmin');
     const role = isMaster ? 'ROLE_MASTER_ADMIN' : isOrg ? 'ROLE_ORG_ADMIN' : 'ROLE_USER';
-    const fullName = isMaster ? 'Master Administrator' : isOrg ? 'Tenant Org Admin' : 'Field Operator Jatin';
+    const fullName = isMaster ? 'Master Platform Admin' : isOrg ? 'Acme Org Administrator' : 'Field Operator Jatin';
 
     return {
       success: true,
@@ -112,8 +155,8 @@ export function handleMockRequest(url, method = 'GET', data = null) {
         email,
         fullName,
         role,
-        organizationId: 'org-1',
-        organizationName: 'Aegis Sentinel Global',
+        organizationId: isMaster ? 'org-1' : 'org-2',
+        organizationName: isMaster ? 'Global Operations HQ' : 'Acme Operations Fleet',
         activeSessionCount: 3,
         isDemoMode: true
       }
@@ -125,10 +168,10 @@ export function handleMockRequest(url, method = 'GET', data = null) {
     const user = getStored('monitoring_user', {
       userId: 'usr-1',
       email: 'admin@monitoring.local',
-      fullName: 'Master Administrator',
+      fullName: 'Master Platform Admin',
       role: 'ROLE_MASTER_ADMIN',
       organizationId: 'org-1',
-      organizationName: 'Aegis Sentinel Global'
+      organizationName: 'Global Operations HQ'
     });
     return { success: true, data: user };
   }
@@ -142,7 +185,7 @@ export function handleMockRequest(url, method = 'GET', data = null) {
         refreshToken: 'mock-refresh-token-ghpages-' + Date.now(),
         userId: 'usr-new-' + Date.now(),
         email: data?.adminEmail || 'new@company.com',
-        fullName: data?.adminFullName || 'New Admin',
+        fullName: data?.adminFullName || 'New Administrator',
         role: 'ROLE_ORG_ADMIN',
         organizationId: 'org-new',
         organizationName: data?.organizationName || 'New Company Corp',
@@ -201,7 +244,27 @@ export function handleMockRequest(url, method = 'GET', data = null) {
     };
   }
 
-  // Devices
+  // Devices & Enrollment Links
+  if (cleanUrl === '/devices/enrollment-links') {
+    const links = getStored(MOCK_STORAGE_KEY_LINKS, INITIAL_LINKS);
+    if (method.toUpperCase() === 'POST') {
+      const newLink = {
+        id: 'lnk-' + Date.now(),
+        token: 'tok-' + Math.random().toString(36).substring(2, 10),
+        devicePresetName: data?.devicePresetName || 'Mobile Operator Device',
+        locationRequested: data?.locationRequested !== false,
+        audioRequested: !!data?.audioRequested,
+        cameraRequested: !!data?.cameraRequested,
+        isClaimed: false,
+        expiresAt: new Date(Date.now() + 86400000 * 7).toISOString()
+      };
+      const updated = [newLink, ...links];
+      setStored(MOCK_STORAGE_KEY_LINKS, updated);
+      return { success: true, data: newLink };
+    }
+    return { success: true, data: links };
+  }
+
   if (cleanUrl === '/devices') {
     const devices = getStored(MOCK_STORAGE_KEY_DEVICES, INITIAL_DEVICES);
     if (method.toUpperCase() === 'POST') {
@@ -209,12 +272,12 @@ export function handleMockRequest(url, method = 'GET', data = null) {
         id: 'dev-' + Date.now(),
         name: data?.name || 'Local Browser Device',
         platform: data?.platform || navigator.userAgent,
-        browser: 'Browser Client',
+        browser: 'Chrome / WebKit',
         ipAddress: '127.0.0.1 (Local)',
         isOnline: true,
-        gpsEnabled: true,
-        audioEnabled: true,
-        cameraEnabled: true,
+        gpsEnabled: data?.gpsEnabled !== false,
+        audioEnabled: !!data?.audioEnabled,
+        cameraEnabled: !!data?.cameraEnabled,
         lastHeartbeat: new Date().toISOString()
       };
       const updated = [newDev, ...devices];
@@ -232,15 +295,39 @@ export function handleMockRequest(url, method = 'GET', data = null) {
     return { success: true, data: { message: 'Device revoked' } };
   }
 
-  // Location sessions
+  if (cleanUrl.match(/\/devices\/.*\/permissions/)) {
+    const devices = getStored(MOCK_STORAGE_KEY_DEVICES, INITIAL_DEVICES);
+    const id = cleanUrl.split('/')[2];
+    const updated = devices.map((d) => (d.id === id ? { ...d, ...data } : d));
+    setStored(MOCK_STORAGE_KEY_DEVICES, updated);
+    return { success: true, data: { message: 'Permissions updated' } };
+  }
+
+  // Location Sessions & Telemetry
   if (cleanUrl === '/location/sessions') {
     return {
       success: true,
       data: {
-        id: 'session-' + Date.now(),
+        id: 'loc-sess-' + Date.now(),
         sessionToken: 'token-' + Math.random().toString(36).substring(7),
         status: 'ACTIVE',
         startedAt: new Date().toISOString()
+      }
+    };
+  }
+
+  if (cleanUrl.match(/\/location\/sessions\/.*\/updates/)) {
+    return {
+      success: true,
+      data: {
+        latitude: data?.latitude || 28.6139,
+        longitude: data?.longitude || 77.2090,
+        accuracy: data?.accuracy || 4.2,
+        altitude: data?.altitude || 21.0,
+        speed: data?.speed || 2.4,
+        heading: data?.heading || 120.0,
+        batteryLevel: data?.batteryLevel || 92.0,
+        recordedAt: new Date().toISOString()
       }
     };
   }
@@ -272,30 +359,119 @@ export function handleMockRequest(url, method = 'GET', data = null) {
     };
   }
 
-  // Users & Organizations
-  if (cleanUrl === '/users') {
-    return { success: true, data: getStored(MOCK_STORAGE_KEY_USERS, INITIAL_USERS) };
+  if (cleanUrl.match(/\/location\/sessions\/.*\/stop/)) {
+    return { success: true, data: { message: 'Session stopped' } };
   }
 
-  if (cleanUrl === '/organizations') {
+  // Media Sessions (Audio & Camera)
+  if (cleanUrl === '/media/sessions') {
     return {
       success: true,
-      data: [
-        { id: 'org-1', name: 'Aegis Sentinel Global', tier: 'ENTERPRISE', maxDevices: 100, activeMembers: 12, createdAt: new Date(Date.now() - 31536000000).toISOString() },
-        { id: 'org-2', name: 'Acme Operations Fleet', tier: 'PRO', maxDevices: 50, activeMembers: 8, createdAt: new Date(Date.now() - 15536000000).toISOString() }
-      ]
+      data: {
+        id: 'media-' + Date.now(),
+        sessionType: data?.sessionType || 'AUDIO',
+        status: 'INITIALIZED',
+        createdAt: new Date().toISOString()
+      }
     };
   }
 
-  // Consents & Audits
+  if (cleanUrl.match(/\/media\/sessions\/.*\/consent/)) {
+    return { success: true, data: { message: 'Consent acknowledged' } };
+  }
+
+  if (cleanUrl.match(/\/media\/sessions\/.*\/terminate/)) {
+    return { success: true, data: { message: 'Media session terminated' } };
+  }
+
+  if (cleanUrl.match(/\/media\/sessions\/.*\/signaling/)) {
+    return { success: true, data: { message: 'Signal relayed' } };
+  }
+
+  // Users Management
+  if (cleanUrl === '/users') {
+    const users = getStored(MOCK_STORAGE_KEY_USERS, INITIAL_USERS);
+    return {
+      success: true,
+      data: {
+        content: users,
+        totalElements: users.length,
+        totalPages: 1,
+        page: 0
+      }
+    };
+  }
+
+  if (cleanUrl === '/users/invite' && method.toUpperCase() === 'POST') {
+    const users = getStored(MOCK_STORAGE_KEY_USERS, INITIAL_USERS);
+    const newInvited = {
+      id: 'usr-' + Date.now(),
+      email: data?.email || 'newuser@acme.local',
+      fullName: 'Invited Operator',
+      role: data?.role || 'ROLE_USER',
+      status: 'INVITED',
+      organizationName: 'Acme Operations Fleet'
+    };
+    const updated = [...users, newInvited];
+    setStored(MOCK_STORAGE_KEY_USERS, updated);
+    return {
+      success: true,
+      data: {
+        token: 'inv-tok-' + Math.random().toString(36).substring(2, 12),
+        expiresAt: new Date(Date.now() + 86400000 * 7).toISOString()
+      }
+    };
+  }
+
+  // Organizations
+  if (cleanUrl === '/organizations' || cleanUrl === '/admin/organizations') {
+    const orgs = getStored(MOCK_STORAGE_KEY_ORGS, INITIAL_ORGS);
+    if (method.toUpperCase() === 'POST') {
+      const newOrg = {
+        id: 'org-' + Date.now(),
+        name: data?.name || 'New Enterprise Org',
+        slug: data?.slug || 'new-org',
+        subscriptionPlan: data?.subscriptionPlan || 'PRO',
+        maxDevices: Number(data?.maxDevices || 25),
+        maxUsers: Number(data?.maxUsers || 50),
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString()
+      };
+      const updated = [...orgs, newOrg];
+      setStored(MOCK_STORAGE_KEY_ORGS, updated);
+      return { success: true, data: newOrg };
+    }
+    return { success: true, data: orgs };
+  }
+
+  // Consents
   if (cleanUrl === '/consents') {
-    return { success: true, data: getStored(MOCK_STORAGE_KEY_CONSENTS, INITIAL_CONSENTS) };
+    const consents = getStored(MOCK_STORAGE_KEY_CONSENTS, INITIAL_CONSENTS);
+    return { success: true, data: consents };
   }
 
+  if (cleanUrl.match(/\/consents\/.*/)) {
+    const consents = getStored(MOCK_STORAGE_KEY_CONSENTS, INITIAL_CONSENTS);
+    const id = cleanUrl.split('/')[2];
+    const updated = consents.filter((c) => c.id !== id);
+    setStored(MOCK_STORAGE_KEY_CONSENTS, updated);
+    return { success: true, data: { message: 'Consent revoked' } };
+  }
+
+  // Audit Logs
   if (cleanUrl === '/admin/audit-logs') {
-    return { success: true, data: getStored(MOCK_STORAGE_KEY_AUDITS, INITIAL_AUDITS) };
+    const audits = getStored(MOCK_STORAGE_KEY_AUDITS, INITIAL_AUDITS);
+    return {
+      success: true,
+      data: {
+        content: audits,
+        totalElements: audits.length,
+        totalPages: 1,
+        page: 0
+      }
+    };
   }
 
-  // Generic success response
+  // Generic fallback
   return { success: true, data: {} };
 }
