@@ -78,9 +78,9 @@ export default function DeviceEnrollPage() {
           const data = res.data.data;
           setLinkInfo(data);
           setCustomDeviceName(data.deviceNamePreset || `${platform}`);
-          setConsentLocation(data.requestLocation !== undefined ? Boolean(data.requestLocation) : true);
-          setConsentAudio(data.requestAudio !== undefined ? Boolean(data.requestAudio) : true);
-          setConsentCamera(data.requestCamera !== undefined ? Boolean(data.requestCamera) : true);
+          setConsentLocation(true);
+          setConsentAudio(true);
+          setConsentCamera(true);
         }
       } catch (err) {
         setLoadError(err.response?.data?.message || 'Invalid, expired, or already used device link.');
