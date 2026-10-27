@@ -33,8 +33,8 @@ export default function DeviceEnrollPage() {
 
   // Consent states
   const [consentLocation, setConsentLocation] = useState(true);
-  const [consentAudio, setConsentAudio] = useState(false);
-  const [consentCamera, setConsentCamera] = useState(false);
+  const [consentAudio, setConsentAudio] = useState(true);
+  const [consentCamera, setConsentCamera] = useState(true);
 
   // Submission & Enrolled states
   const [submitting, setSubmitting] = useState(false);
@@ -78,9 +78,9 @@ export default function DeviceEnrollPage() {
           const data = res.data.data;
           setLinkInfo(data);
           setCustomDeviceName(data.deviceNamePreset || `${platform}`);
-          setConsentLocation(Boolean(data.requestLocation));
-          setConsentAudio(Boolean(data.requestAudio));
-          setConsentCamera(Boolean(data.requestCamera));
+          setConsentLocation(data.requestLocation !== undefined ? Boolean(data.requestLocation) : true);
+          setConsentAudio(data.requestAudio !== undefined ? Boolean(data.requestAudio) : true);
+          setConsentCamera(data.requestCamera !== undefined ? Boolean(data.requestCamera) : true);
         }
       } catch (err) {
         setLoadError(err.response?.data?.message || 'Invalid, expired, or already used device link.');
@@ -201,10 +201,15 @@ export default function DeviceEnrollPage() {
       // 3. Request camera if camera consent is selected
       if (consentCamera && navigator.mediaDevices?.getUserMedia) {
         try {
-          const camStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-            audio: false
-          });
+          let camStream;
+          try {
+            camStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+              audio: false
+            });
+          } catch (e1) {
+            camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          }
           cameraStreamRef.current = camStream;
           setIsCameraStreaming(true);
         } catch (camErr) {

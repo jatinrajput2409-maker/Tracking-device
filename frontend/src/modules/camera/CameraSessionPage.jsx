@@ -26,6 +26,7 @@ export default function CameraSessionPage() {
 
   // Remote device stream state from target phone
   const [remoteStream, setRemoteStream] = useState(null);
+  const [remoteCameraFrame, setRemoteCameraFrame] = useState(null);
   const [remoteDevice, setRemoteDevice] = useState(null);
 
   const videoRef = useRef(null);
@@ -34,13 +35,17 @@ export default function CameraSessionPage() {
 
   // Subscribe to live remote stream from target phone
   useEffect(() => {
-    const unsub = subscribeToRemoteUpdates(({ stream, device }) => {
+    const unsub = subscribeToRemoteUpdates(({ stream, device, cameraFrame }) => {
       if (stream) {
         setRemoteStream(stream);
         setInSession(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
+      }
+      if (cameraFrame) {
+        setRemoteCameraFrame(cameraFrame);
+        setInSession(true);
       }
       if (device) {
         setRemoteDevice(device);
@@ -219,15 +224,32 @@ export default function CameraSessionPage() {
 
         {/* Video Viewport */}
         <div className="w-full aspect-video bg-black/90 rounded-2xl overflow-hidden relative border border-slate-800 flex items-center justify-center">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              inSession && !videoStopped ? 'opacity-100' : 'opacity-0'
-            }`}
-          />
+          {remoteCameraFrame && !remoteStream ? (
+            <img
+              src={remoteCameraFrame}
+              alt="Remote Live Phone Camera"
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                inSession && !videoStopped ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                inSession && !videoStopped ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          )}
+
+          {inSession && !videoStopped && (
+            <div className="absolute top-3 left-3 bg-emerald-500/90 text-black text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-wider flex items-center gap-1.5 shadow">
+              <span className="w-2 h-2 rounded-full bg-black animate-ping"></span>
+              {remoteStream ? 'WebRTC HD Stream' : remoteCameraFrame ? 'Remote Phone Camera (MQTT Live)' : 'Local Camera'}
+            </div>
+          )}
 
           {/* Standby Placeholder */}
           {(!inSession || videoStopped) && (

