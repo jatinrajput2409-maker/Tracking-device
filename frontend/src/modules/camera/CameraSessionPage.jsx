@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
+import { subscribeToRemoteUpdates } from '../../services/peerBridge';
 import {
   Camera,
   Video,
@@ -23,9 +24,36 @@ export default function CameraSessionPage() {
   const [sessionDuration, setSessionDuration] = useState(0);
   const [error, setError] = useState('');
 
+  // Remote device stream state from target phone
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [remoteDevice, setRemoteDevice] = useState(null);
+
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const timerRef = useRef(null);
+
+  // Subscribe to live remote stream from target phone
+  useEffect(() => {
+    const unsub = subscribeToRemoteUpdates(({ stream, device }) => {
+      if (stream) {
+        setRemoteStream(stream);
+        setInSession(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }
+      if (device) {
+        setRemoteDevice(device);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current && remoteStream) {
+      videoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream, inSession]);
 
   useEffect(() => {
     return () => {

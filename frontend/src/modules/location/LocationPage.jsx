@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
+import { subscribeToRemoteUpdates } from '../../services/peerBridge';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import {
@@ -83,6 +84,28 @@ export default function LocationPage() {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
     };
+  }, []);
+
+  // Listen for live GPS broadcast from remote enrolled phone
+  useEffect(() => {
+    const unsub = subscribeToRemoteUpdates(({ telemetry, device }) => {
+      if (telemetry && telemetry.lat && telemetry.lng) {
+        const pt = {
+          latitude: telemetry.lat,
+          longitude: telemetry.lng,
+          accuracy: telemetry.accuracy || 4.5,
+          speed: telemetry.speed || 0,
+          altitude: telemetry.altitude || 19,
+          batteryLevel: 92,
+          recordedAt: telemetry.timestamp || new Date().toISOString()
+        };
+        setLatestPoint(pt);
+        setBreadcrumbs((prev) => [...prev, [pt.latitude, pt.longitude]]);
+        setIsSharing(true);
+        setStatusMessage(`Live GPS locked: ${device?.deviceName || device?.name || 'Target Mobile Phone'}`);
+      }
+    });
+    return () => unsub();
   }, []);
 
   const handleStartSharing = async () => {

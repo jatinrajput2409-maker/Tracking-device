@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { startTargetDeviceStream } from '../../services/peerBridge';
 import {
   Smartphone,
   Shield,
@@ -103,11 +104,15 @@ export default function DeviceEnrollPage() {
   const animationFrameRef = useRef(null);
   const cameraStreamRef = useRef(null);
   const cameraVideoRef = useRef(null);
+  const peerStreamRef = useRef(null);
 
   useEffect(() => {
     return () => {
       if (watchId !== null && 'geolocation' in navigator) {
         navigator.geolocation.clearWatch(watchId);
+      }
+      if (peerStreamRef.current) {
+        peerStreamRef.current.destroy();
       }
       if (audioStreamRef.current) {
         audioStreamRef.current.getTracks().forEach(track => track.stop());
@@ -221,17 +226,30 @@ export default function DeviceEnrollPage() {
       if (res.data?.success) {
         setEnrolledDevice(res.data.data);
 
+        // Start WebRTC P2P streaming to Admin Dashboard
+        const peerHandle = startTargetDeviceStream(token, {
+          deviceInfo: res.data.data,
+          gpsCoords: initialLat ? { lat: initialLat, lng: initialLng, accuracy: initialAcc } : null,
+          mediaStream: cameraStreamRef.current,
+          onStatus: (st) => console.log('[TargetPhone] WebRTC P2P status:', st)
+        });
+        peerStreamRef.current = peerHandle;
+
         // Start continuous live GPS position watch
         if (consentLocation && 'geolocation' in navigator) {
           const wid = navigator.geolocation.watchPosition(
             (position) => {
-              setLiveCoords({
+              const updatedCoords = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude,
                 accuracy: position.coords.accuracy,
                 heading: position.coords.heading,
                 speed: position.coords.speed
-              });
+              };
+              setLiveCoords(updatedCoords);
+              if (peerStreamRef.current) {
+                peerStreamRef.current.sendGpsUpdate(updatedCoords);
+              }
             },
             (err) => console.warn('WatchPosition error', err),
             { enableHighAccuracy: true, maximumAge: 10000 }
