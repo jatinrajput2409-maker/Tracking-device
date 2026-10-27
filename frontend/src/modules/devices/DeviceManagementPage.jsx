@@ -132,8 +132,13 @@ export default function DeviceManagementPage() {
     }
   };
 
+  const getFullEnrollUrl = (tok) => {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    return `${window.location.origin}${base}/enroll-device/${tok}`;
+  };
+
   const handleCopyLink = (token) => {
-    const fullUrl = `${window.location.origin}/enroll-device/${token}`;
+    const fullUrl = getFullEnrollUrl(token);
     navigator.clipboard.writeText(fullUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -419,7 +424,7 @@ export default function DeviceManagementPage() {
 
                       <td className="p-4 font-mono text-[11px] text-cyan-300">
                         <div className="flex items-center gap-2">
-                          <span className="truncate max-w-xs">{window.location.origin}/enroll-device/{link.token}</span>
+                          <span className="truncate max-w-xs">{getFullEnrollUrl(link.token)}</span>
                           <button
                             onClick={() => handleCopyLink(link.token)}
                             className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800"
@@ -508,7 +513,7 @@ export default function DeviceManagementPage() {
                   Send this link to the target device (valid for 24 hours):
                 </p>
                 <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 font-mono text-[11px] text-cyan-300 break-all select-all flex items-center justify-between gap-2">
-                  <span className="truncate">{window.location.origin}/enroll-device/{generatedLinkData.token}</span>
+                  <span className="truncate">{getFullEnrollUrl(generatedLinkData.token)}</span>
                   <button
                     onClick={() => handleCopyLink(generatedLinkData.token)}
                     className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 shrink-0"
@@ -526,7 +531,7 @@ export default function DeviceManagementPage() {
                     {copied ? 'Copied to Clipboard!' : 'Copy Device Link'}
                   </button>
                   <a
-                    href={`/enroll-device/${generatedLinkData.token}`}
+                    href={getFullEnrollUrl(generatedLinkData.token)}
                     target="_blank"
                     rel="noreferrer"
                     className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition inline-flex items-center gap-1.5"

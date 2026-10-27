@@ -265,6 +265,60 @@ export function handleMockRequest(url, method = 'GET', data = null) {
     return { success: true, data: links };
   }
 
+  // Enrollment Link Verification (Public, no login needed)
+  if (cleanUrl.match(/\/devices\/enrollment-links\/verify\/[^\/]+$/) && method.toUpperCase() === 'GET') {
+    const parts = cleanUrl.split('/');
+    const token = parts[parts.length - 1];
+    const links = getStored(MOCK_STORAGE_KEY_LINKS, INITIAL_LINKS);
+    const found = links.find((l) => l.token === token) || {
+      id: 'lnk-' + token,
+      token,
+      devicePresetName: 'Remote Mobile Device',
+      locationRequested: true,
+      audioRequested: true,
+      cameraRequested: true
+    };
+    return {
+      success: true,
+      data: {
+        id: found.id,
+        token: found.token,
+        deviceNamePreset: found.devicePresetName || 'Remote Mobile Device',
+        requestLocation: found.locationRequested !== false,
+        requestAudio: !!found.audioRequested,
+        requestCamera: !!found.cameraRequested,
+        organizationName: 'Global Operations Fleet'
+      }
+    };
+  }
+
+  // Enrollment Link Claim (Authorized by user, hardware beacon registered)
+  if (cleanUrl.match(/\/devices\/enrollment-links\/verify\/.*\/claim/) && method.toUpperCase() === 'POST') {
+    const devices = getStored(MOCK_STORAGE_KEY_DEVICES, INITIAL_DEVICES);
+    const newDevice = {
+      id: 'dev-' + Date.now(),
+      deviceName: data?.customDeviceName || 'Remote Mobile Device',
+      name: data?.customDeviceName || 'Remote Mobile Device',
+      platform: data?.platform || 'Smartphone',
+      browser: data?.browser || 'Mobile Browser',
+      ipAddress: '192.168.1.188 (Remote Mobile)',
+      isOnline: true,
+      gpsEnabled: data?.consentLocation !== false,
+      locationPermissionGranted: data?.consentLocation !== false,
+      audioEnabled: !!data?.consentAudio,
+      audioPermissionGranted: !!data?.consentAudio,
+      cameraEnabled: !!data?.consentCamera,
+      cameraPermissionGranted: !!data?.consentCamera,
+      lastHeartbeat: new Date().toISOString()
+    };
+    const updated = [newDevice, ...devices];
+    setStored(MOCK_STORAGE_KEY_DEVICES, updated);
+    return {
+      success: true,
+      data: newDevice
+    };
+  }
+
   if (cleanUrl === '/devices') {
     const devices = getStored(MOCK_STORAGE_KEY_DEVICES, INITIAL_DEVICES);
     if (method.toUpperCase() === 'POST') {

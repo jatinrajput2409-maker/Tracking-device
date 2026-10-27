@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Smartphone,
   Shield,
@@ -72,7 +72,7 @@ export default function DeviceEnrollPage() {
     // 2. Fetch and verify link token
     const fetchLink = async () => {
       try {
-        const res = await axios.get(`/api/v1/devices/enrollment-links/verify/${token}`);
+        const res = await api.get(`/devices/enrollment-links/verify/${token}`);
         if (res.data?.success) {
           const data = res.data.data;
           setLinkInfo(data);
@@ -94,12 +94,15 @@ export default function DeviceEnrollPage() {
   // Live Telemetry states after enrollment
   const [liveCoords, setLiveCoords] = useState(null);
   const [isMicStreaming, setIsMicStreaming] = useState(false);
+  const [isCameraStreaming, setIsCameraStreaming] = useState(false);
   const [micAudioLevel, setMicAudioLevel] = useState(0);
   const [watchId, setWatchId] = useState(null);
 
-  const audioStreamRef = React.useRef(null);
-  const audioContextRef = React.useRef(null);
-  const animationFrameRef = React.useRef(null);
+  const audioStreamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+  const cameraVideoRef = useRef(null);
 
   useEffect(() => {
     return () => {
@@ -108,6 +111,9 @@ export default function DeviceEnrollPage() {
       }
       if (audioStreamRef.current) {
         audioStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (cameraStreamRef.current) {
+        cameraStreamRef.current.getTracks().forEach(track => track.stop());
       }
       if (audioContextRef.current) {
         audioContextRef.current.close().catch(() => {});
@@ -187,6 +193,20 @@ export default function DeviceEnrollPage() {
         await startLiveAudioCapture();
       }
 
+      // 3. Request camera if camera consent is selected
+      if (consentCamera && navigator.mediaDevices?.getUserMedia) {
+        try {
+          const camStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+            audio: false
+          });
+          cameraStreamRef.current = camStream;
+          setIsCameraStreaming(true);
+        } catch (camErr) {
+          console.warn('Camera access denied or hardware busy:', camErr);
+        }
+      }
+
       const payload = {
         customDeviceName: customDeviceName || 'Monitored Device',
         deviceType: /MOBILE/i.test(detectedPlatform) ? 'MOBILE_ANDROID' : 'BROWSER',
@@ -197,7 +217,7 @@ export default function DeviceEnrollPage() {
         consentCamera
       };
 
-      const res = await axios.post(`/api/v1/devices/enrollment-links/verify/${token}/claim`, payload);
+      const res = await api.post(`/devices/enrollment-links/verify/${token}/claim`, payload);
       if (res.data?.success) {
         setEnrolledDevice(res.data.data);
 
@@ -333,12 +353,37 @@ export default function DeviceEnrollPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-between text-slate-300 pt-1 border-t border-slate-800/80">
-              <span>Camera Module:</span>
-              <span className={enrolledDevice.cameraPermissionGranted ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
-                {enrolledDevice.cameraPermissionGranted ? 'Granted' : 'Disabled'}
-              </span>
-            </div>
+            {enrolledDevice.cameraPermissionGranted && (
+              <div className="p-2.5 rounded-xl bg-slate-950/70 border border-emerald-500/20">
+                <div className="flex items-center justify-between text-slate-300 mb-1.5">
+                  <span className="flex items-center gap-1.5 font-semibold text-emerald-400">
+                    <Camera className="w-3.5 h-3.5" /> Camera Stream:
+                  </span>
+                  <span className="text-emerald-400 font-bold flex items-center gap-1 text-[10px]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    {isCameraStreaming ? 'Transmitting Live Feed' : 'Ready'}
+                  </span>
+                </div>
+                {isCameraStreaming && (
+                  <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-slate-800 mt-2">
+                    <video
+                      autoPlay
+                      playsInline
+                      muted
+                      ref={(el) => {
+                        if (el && cameraStreamRef.current && el.srcObject !== cameraStreamRef.current) {
+                          el.srcObject = cameraStreamRef.current;
+                        }
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-emerald-500/80 text-black text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                      Live Camera
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 text-[11px] text-slate-400 leading-snug">
